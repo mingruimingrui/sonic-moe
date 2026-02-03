@@ -3,6 +3,7 @@
 # ********************************************************************************
 
 import cuda.bindings.driver as cuda
+import cutlass
 import cutlass.cute as cute
 import torch
 import triton
@@ -76,7 +77,12 @@ def _up_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
-    mTileCount_semaphore = None
+    mTileCount_semaphore = cute.make_ptr(
+        cutlass.Int32,
+        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        cute.AddressSpace.gmem,
+        assumed_align=4,
+    )
 
     if expert_schedule_order is None:
         mE_permute_order = None
@@ -152,7 +158,12 @@ def _down_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
-    mTileCount_semaphore = None
+    mTileCount_semaphore = cute.make_ptr(
+        cutlass.Int32,
+        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        cute.AddressSpace.gmem,
+        assumed_align=4,
+    )
 
     if expert_schedule_order is None:
         mE_permute_order = None
