@@ -221,9 +221,10 @@ def _up_projection_backward_act(
     mDx_expanded = convert_torch_tensor_to_cute_tensor(dx_expanded, (0, 1), 1, 16, 8, stream=stream_id)
     mW1_trans = convert_torch_tensor_to_cute_tensor(w1.permute(1, 0, 2), (2, 1, 0), 0, 16, 8, stream=stream_id)
 
+    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
     mTileCount_semaphore = cute.runtime.make_ptr(
         cutlass.Int32,
-        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        tile_count_semaphore.data_ptr(),
         cute.AddressSpace.gmem,
         assumed_align=4,
     )
@@ -295,9 +296,10 @@ def _up_projection_backward_weight(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
     mTileCount_semaphore = cute.runtime.make_ptr(
         cutlass.Int32,
-        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        tile_count_semaphore.data_ptr(),
         cute.AddressSpace.gmem,
         assumed_align=4,
     )
@@ -388,9 +390,10 @@ def _down_projection_backward_act(
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
     mS_scatter = convert_torch_tensor_to_cute_tensor(s_scatter_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
     mTileCount_semaphore = cute.runtime.make_ptr(
         cutlass.Int32,
-        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        tile_count_semaphore.data_ptr(),
         cute.AddressSpace.gmem,
         assumed_align=4,
     )
@@ -525,9 +528,10 @@ def _down_projection_backward_weight(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
     mTileCount_semaphore = cute.runtime.make_ptr(
         cutlass.Int32,
-        torch.zeros(1, dtype=torch.int32, device="cuda").data_ptr(),
+        tile_count_semaphore.data_ptr(),
         cute.AddressSpace.gmem,
         assumed_align=4,
     )
