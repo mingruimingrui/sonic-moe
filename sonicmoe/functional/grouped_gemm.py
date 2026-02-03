@@ -816,10 +816,10 @@ class HopperWgmma_MoE_kernel:
         if const_expr(self.a_dtype.width != 16 and self.a_dtype.width != 8):
             raise TypeError("a_dtype should be float16 or float8")
 
-        if const_expr(mBatchIdx_schedule_order is not None):
-            assert (
-                mTileCount_semaphore is None
-            ), "we only define a static scheduling order for static persistent tile scheduler"
+        # if const_expr(mBatchIdx_schedule_order is not None):
+        #     assert (
+        #         mTileCount_semaphore is None
+        #     ), "we only define a static scheduling order for static persistent tile scheduler"
 
         self.tensormap_management_bytes = (
             self.tensormap_bytes_total

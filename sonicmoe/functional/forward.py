@@ -76,6 +76,8 @@ def _up_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -105,6 +107,7 @@ def _up_projection_forward(
             mX_gather,
             tensormaps[0],
             tensormaps[1],
+            mTileCount_semaphore,
             mE_permute_order,
             current_stream,
         )
@@ -121,6 +124,7 @@ def _up_projection_forward(
         mX_gather,
         w1_tensormaps[0],
         w1_tensormaps[1],
+        mTileCount_semaphore,
         mE_permute_order,
         current_stream,
     )
@@ -148,6 +152,8 @@ def _down_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -165,13 +171,13 @@ def _down_projection_forward(
         w2_module = HopperWgmma_MoE_Down_proj_Fwd(E, H, I)
         tensormaps = [w2_module.module.generate_tensormap(None, None, None) for _ in range(1)]
         _down_projection_forward.compile_cache[compile_w2_key] = cute.compile(
-            w2_module, mY1, mW2, mY2, mB2, mE_offset, mX_gather, tensormaps[0], mE_permute_order, current_stream
+            w2_module, mY1, mW2, mY2, mB2, mE_offset, mX_gather, tensormaps[0], mTileCount_semaphore, mE_permute_order, current_stream
         )
         _down_projection_forward.compile_cache[TENSORMAP] = tensormaps
 
     w2_tensormaps = _down_projection_forward.compile_cache[TENSORMAP]
     _down_projection_forward.compile_cache[compile_w2_key](
-        mY1, mW2, mY2, mB2, mE_offset, mX_gather, w2_tensormaps[0], mE_permute_order, current_stream
+        mY1, mW2, mY2, mB2, mE_offset, mX_gather, w2_tensormaps[0], mTileCount_semaphore, mE_permute_order, current_stream
     )
 
 

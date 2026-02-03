@@ -125,7 +125,7 @@ class HopperWgmma_MoE_Up_proj_Fwd:
 
     @cute.jit
     def __call__(
-        self, mX, mW1, mZ, mY1, mB1, mE_offset, mX_gather, mD_tensormap, mY1_tensormap, mE_permute_order, stream
+        self, mX, mW1, mZ, mY1, mB1, mE_offset, mX_gather, mD_tensormap, mY1_tensormap, mTileCount_semaphore, mE_permute_order, stream
     ):
         return self.module(
             mX,
@@ -145,7 +145,7 @@ class HopperWgmma_MoE_Up_proj_Fwd:
             None,
             mD_tensormap,
             mY1_tensormap,
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,
@@ -205,7 +205,7 @@ class HopperWgmma_MoE_Down_proj_Fwd:
         )
 
     @cute.jit
-    def __call__(self, mY1, mW2, mY2, mB2, mE_offset, mX_gather, mD_tensormap, mE_permute_order, stream):
+    def __call__(self, mY1, mW2, mY2, mB2, mE_offset, mX_gather, mD_tensormap, mTileCount_semaphore, mE_permute_order, stream):
         # we are not really using mX_gather in the Grouped GEMM,
         # but CuTe-DSL compiler disallows dynamic flow so we still need to pass this argument
         return self.module(
@@ -226,7 +226,7 @@ class HopperWgmma_MoE_Down_proj_Fwd:
             None,
             mD_tensormap,
             None,
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,
@@ -322,6 +322,7 @@ class HopperWgmma_MoE_Down_proj_ActGrad_Bwd:
         mX_gather,
         mS_scatter,
         tensormaps,
+        mTileCount_semaphore,
         mE_permute_order,
         stream,
     ):
@@ -343,7 +344,7 @@ class HopperWgmma_MoE_Down_proj_ActGrad_Bwd:
             tensormaps[0],
             tensormaps[1],
             tensormaps[2],
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,
@@ -397,7 +398,7 @@ class HopperWgmma_MoE_Down_proj_WeightGrad_Bwd:
         )
 
     @cute.jit
-    def __call__(self, mDout_trans, mY1S_trans, mDw2, mE_offset, mX_gather, tensormaps, mE_permute_order, stream):
+    def __call__(self, mDout_trans, mY1S_trans, mDw2, mE_offset, mX_gather, tensormaps, mTileCount_semaphore, mE_permute_order, stream):
         return self.module(
             mDout_trans,
             mY1S_trans,
@@ -416,7 +417,7 @@ class HopperWgmma_MoE_Down_proj_WeightGrad_Bwd:
             None,
             None,
             None,
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,
@@ -476,7 +477,7 @@ class HopperWgmma_MoE_Up_proj_ActGrad_Bwd:
 
     @cute.jit
     def __call__(
-        self, mDz, mW1_trans, mDx_expanded, mE_offset, mX_gather, mS_scatter, tensormaps, mE_permute_order, stream
+        self, mDz, mW1_trans, mDx_expanded, mE_offset, mX_gather, mS_scatter, tensormaps, mTileCount_semaphore, mE_permute_order, stream
     ):
         return self.module(
             mDz,
@@ -496,7 +497,7 @@ class HopperWgmma_MoE_Up_proj_ActGrad_Bwd:
             None,
             tensormaps[0],
             tensormaps[1],
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,
@@ -555,7 +556,7 @@ class HopperWgmma_MoE_Up_proj_WeightGrad_Bwd:
         )
 
     @cute.jit
-    def __call__(self, mX_trans, mDz_trans, mDw1_trans, mE_offset, mX_gather, tensormaps, mE_permute_order, stream):
+    def __call__(self, mX_trans, mDz_trans, mDw1_trans, mE_offset, mX_gather, tensormaps, mTileCount_semaphore, mE_permute_order, stream):
         return self.module(
             mX_trans,
             mDz_trans,
@@ -574,7 +575,7 @@ class HopperWgmma_MoE_Up_proj_WeightGrad_Bwd:
             None,
             None,
             None,
-            None,
+            mTileCount_semaphore,
             mE_permute_order,
             const_expr(self.max_active_clusters),
             stream,

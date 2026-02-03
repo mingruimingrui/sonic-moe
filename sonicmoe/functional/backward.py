@@ -220,6 +220,8 @@ def _up_projection_backward_act(
     mDx_expanded = convert_torch_tensor_to_cute_tensor(dx_expanded, (0, 1), 1, 16, 8, stream=stream_id)
     mW1_trans = convert_torch_tensor_to_cute_tensor(w1.permute(1, 0, 2), (2, 1, 0), 0, 16, 8, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -239,6 +241,7 @@ def _up_projection_backward_act(
             mX_gather,
             mS_scatter,
             tensormaps,
+            mTileCount_semaphore,
             mE_permute_order,
             current_stream,
         )
@@ -253,6 +256,7 @@ def _up_projection_backward_act(
         mX_gather,
         mS_scatter,
         dx_tensormaps,
+        mTileCount_semaphore,
         mE_permute_order,
         current_stream,
     )
@@ -285,6 +289,8 @@ def _up_projection_backward_weight(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -303,6 +309,7 @@ def _up_projection_backward_weight(
             mE_offset,
             mX_gather,
             tensormaps,
+            mTileCount_semaphore,
             mE_permute_order,
             current_stream,
         )
@@ -316,6 +323,7 @@ def _up_projection_backward_weight(
         mE_offset,
         mX_gather,
         dw1_tensormaps,
+        mTileCount_semaphore,
         mE_permute_order,
         current_stream,
     )
@@ -369,6 +377,8 @@ def _down_projection_backward_act(
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
     mS_scatter = convert_torch_tensor_to_cute_tensor(s_scatter_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -401,6 +411,7 @@ def _down_projection_backward_act(
             mX_gather,
             mS_scatter,
             tensormaps,
+            mTileCount_semaphore,
             mE_permute_order,
             current_stream,
         )
@@ -424,6 +435,7 @@ def _down_projection_backward_act(
         mX_gather,
         mS_scatter,
         dz_tensormaps,
+        mTileCount_semaphore,
         mE_permute_order,
         current_stream,
     )
@@ -497,6 +509,8 @@ def _down_projection_backward_weight(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
+    mTileCount_semaphore = None
+
     if expert_schedule_order is None:
         mE_permute_order = None
     else:
@@ -515,6 +529,7 @@ def _down_projection_backward_weight(
             mE_offset,
             mX_gather,
             tensormaps,
+            mTileCount_semaphore,
             mE_permute_order,
             current_stream,
         )
@@ -522,7 +537,7 @@ def _down_projection_backward_weight(
 
     dw2_tensormaps = _down_projection_backward_weight.compile_cache[f"dw2-{TENSORMAP}"]
     _down_projection_backward_weight.compile_cache[compile_dw2_key](
-        mDout_trans, mY1S_trans, mDw2, mE_offset, mX_gather, dw2_tensormaps, mE_permute_order, current_stream
+        mDout_trans, mY1S_trans, mDw2, mE_offset, mX_gather, dw2_tensormaps, mTileCount_semaphore, mE_permute_order, current_stream
     )
 
 
