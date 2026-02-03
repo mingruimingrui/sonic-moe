@@ -65,6 +65,7 @@ def _up_projection_forward(
     activation_type: str,
     is_glu_activation: bool,
     is_inference_mode_enabled: bool = False,
+    dynamic_persistent: bool = False,
 ) -> None:
     I, H, E = w1.size()
     if is_glu_activation:
@@ -77,13 +78,15 @@ def _up_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
-    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
-    mTileCount_semaphore = cute.runtime.make_ptr(
-        cutlass.Int32,
-        tile_count_semaphore.data_ptr(),
-        cute.AddressSpace.gmem,
-        assumed_align=4,
-    )
+    mTileCount_semaphore = None
+    if dynamic_persistent:
+        tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
+        mTileCount_semaphore = cute.runtime.make_ptr(
+            cutlass.Int32,
+            tile_count_semaphore.data_ptr(),
+            cute.AddressSpace.gmem,
+            assumed_align=4,
+        )
 
     if expert_schedule_order is None:
         mE_permute_order = None
@@ -150,6 +153,7 @@ def _down_projection_forward(
     expert_schedule_order: torch.Tensor,
     x_gather_idx: torch.Tensor,
     stream_id: int,
+    dynamic_persistent: bool = False,
 ) -> None:
     H, I, E = w2.size()
 
@@ -159,13 +163,15 @@ def _down_projection_forward(
     mE_offset = convert_torch_tensor_to_cute_tensor(expert_frequency_offset, (0,), 0, 4, 1, stream=stream_id)
     mX_gather = convert_torch_tensor_to_cute_tensor(x_gather_idx, (0,), 0, 4, 1, stream=stream_id)
 
-    tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
-    mTileCount_semaphore = cute.runtime.make_ptr(
-        cutlass.Int32,
-        tile_count_semaphore.data_ptr(),
-        cute.AddressSpace.gmem,
-        assumed_align=4,
-    )
+    mTileCount_semaphore = None
+    if dynamic_persistent:
+        tile_count_semaphore = torch.zeros(1, dtype=torch.int32, device="cuda")
+        mTileCount_semaphore = cute.runtime.make_ptr(
+            cutlass.Int32,
+            tile_count_semaphore.data_ptr(),
+            cute.AddressSpace.gmem,
+            assumed_align=4,
+        )
 
     if expert_schedule_order is None:
         mE_permute_order = None
